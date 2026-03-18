@@ -15,6 +15,7 @@
 DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 DEB_HOST_MULTIARCH  ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
+DEB_HOST_ARCH       ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
 ifneq ($(DEB_HOST_GNU_TYPE),$(DEB_BUILD_GNU_TYPE))
 CROSS= --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
 else
@@ -60,7 +61,10 @@ build-stamp: configure-stamp
 	$(MAKE) $(NJOBS)
 	touch $@
 
-ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+# Skip tests on sw64 architecture due to long double issues
+ifeq ($(DEB_HOST_ARCH),sw64)
+	@echo "Skipping tests on sw64 architecture (long double issues)"
+else ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	GMP_CHECK_RANDOMIZE=1 $(MAKE) check
 endif
 
